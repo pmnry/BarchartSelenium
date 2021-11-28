@@ -1,0 +1,17 @@
+
+CREATE TABLE chains(
+asof_date timestamp,
+strike float,
+last float,
+theor float,
+delta float,
+gamma float,
+iv float,
+theta float,
+vega float,
+rho float,
+vol_oi float,
+volume bigint,
+open_int bigint,
+type varchar(6),
+last_trade timestamp);
