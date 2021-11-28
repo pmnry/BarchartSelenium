@@ -23,7 +23,9 @@ class Config(object):
 
 if __name__ == '__main__':
 
+    # create SQL alchemy connection
     config = Config()
     cnx = create_engine(config.SQLALCHEMY_DATABASE_URI)
 
+    # run scraper
     df = barchart_scraper(BROWSER_PATH, urls, cnx)
