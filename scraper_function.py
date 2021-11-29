@@ -16,7 +16,7 @@ def barchart_scraper(browser_path, url, engine):
     driver.get(url)
 
     expiry_box = driver.find_element(By.XPATH, '//*[@id="main-content-column"]/div/div[3]/div[1]/div/div[2]/select')
-    expiry_list = [x.text for x in expiry_box.find_elements_by_tag_name("option")]
+    expiry_list = [x.text for x in expiry_box.find_elements(By.TAG_NAME,"option")]
     driver.quit()
     moneyness = 'moneyness=20' #options 5,10,20,50
 
@@ -26,6 +26,7 @@ def barchart_scraper(browser_path, url, engine):
     for expiry in pbar(expiry_list):
         curr_url = url + '?expiration=' + expiry.replace(' (w)', '-w').replace(' (m)','-m') + '&' + moneyness
         print(curr_url)
+        driver = webdriver.Chrome(executable_path=browser_path)
         driver.implicitly_wait(30)
         driver.get(curr_url)
 
