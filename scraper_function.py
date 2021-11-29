@@ -1,40 +1,34 @@
 # imports
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from time import sleep
-import random
 import pandas as pd
 from progressbar import ProgressBar
 pbar = ProgressBar()
-import re
-import ast
 from bs4 import BeautifulSoup
 from datetime import datetime as dt
 
-def sleep_for(opt1, opt2):
-    time_for = random.uniform(opt1, opt2)
-    time_for_int = int(round(time_for))
-    sleep(abs(time_for_int - time_for))
-    for i in range(time_for_int, 0, -1):
-        sleep(1)
-
-def barchart_scraper(browser_path, urls, button_xpath, engine):
+def barchart_scraper(browser_path, url, engine):
 
     # setting the chromedriver path and initializing driver
     driver = webdriver.Chrome(executable_path=browser_path)
     driver.set_page_load_timeout(100)
+    driver.implicitly_wait(30)
+    driver.get(url)
 
+    expiry_box = driver.find_element(By.XPATH, '//*[@id="main-content-column"]/div/div[3]/div[1]/div/div[2]/select')
+    expiry_list = [x.text for x in expiry_box.find_elements_by_tag_name("option")]
+    driver.quit()
+    moneyness = 'moneyness=20' #options 5,10,20,50
 
     # create master df to append to
     master_df = pd.DataFrame()
 
-    for orig_url in pbar(urls):
-        print(str(orig_url))
-
-        url = orig_url
+    for expiry in pbar(expiry_list):
+        curr_url = url + '?expiration=' + expiry.replace(' (w)', '-w').replace(' (m)','-m') + '&' + moneyness
+        print(curr_url)
         driver.implicitly_wait(30)
-        driver.get(url)
-        print(str(url))
+        driver.get(curr_url)
+
         # driver.find_elements(By.XPATH, button_xpath)[0].click()
         soup = BeautifulSoup(driver.page_source, 'lxml')
         tables = soup.find_all('table')
@@ -43,6 +37,7 @@ def barchart_scraper(browser_path, urls, button_xpath, engine):
         for df in dfs[:-1]:
             try:
                 df['asof_date'] = dt.now().strftime("%m/%d/%Y %H:%M:%S")
+                df['expiry'] = pd.to_datetime(expiry.replace(' (w)','').replace(' (m)',''))
                 df.drop(columns='Links', index=1, inplace=True)
                 # df.columns = df.columns.str.lower()
                 df = df.iloc[:-1]

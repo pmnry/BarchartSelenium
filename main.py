@@ -10,7 +10,7 @@ from config import POSTGRES, BROWSER_PATH
 # set url
 ###############################################################
 
-urls = ["https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks"]
+url = "https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks"
 
 ###############################################################
 # start of script -- no need to edit below this point
@@ -28,4 +28,4 @@ if __name__ == '__main__':
     cnx = create_engine(config.SQLALCHEMY_DATABASE_URI)
 
     # run scraper
-    df = barchart_scraper(BROWSER_PATH, urls, cnx)
+    df = barchart_scraper(BROWSER_PATH, url, cnx)
