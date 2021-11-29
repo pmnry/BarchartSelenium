@@ -1,11 +1,15 @@
 # imports
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import pandas as pd
 from progressbar import ProgressBar
 pbar = ProgressBar()
 from bs4 import BeautifulSoup
 from datetime import datetime as dt
+import time
 
 def barchart_scraper(browser_path, url, engine):
 
@@ -27,15 +31,14 @@ def barchart_scraper(browser_path, url, engine):
         curr_url = url + '?expiration=' + expiry.replace(' (w)', '-w').replace(' (m)','-m') + '&' + moneyness
         print(curr_url)
         driver = webdriver.Chrome(executable_path=browser_path)
-        driver.implicitly_wait(30)
         driver.get(curr_url)
+        time.sleep(5)
 
-        # driver.find_elements(By.XPATH, button_xpath)[0].click()
         soup = BeautifulSoup(driver.page_source, 'lxml')
         tables = soup.find_all('table')
         dfs = pd.read_html(str(tables))
 
-        for df in dfs[:-1]:
+        for df in dfs:
             try:
                 df['asof_date'] = dt.now().strftime("%m/%d/%Y %H:%M:%S")
                 df['expiry'] = pd.to_datetime(expiry.replace(' (w)','').replace(' (m)',''))
@@ -47,7 +50,7 @@ def barchart_scraper(browser_path, url, engine):
                                    'Open Int': 'open_int', 'Vol/OI': 'vol_oi', 'Type': 'type',
                                    'Last Trade': 'last_trade'}, inplace=True)
                 num_cols = ['strike','last','theor','iv','delta','gamma','theta','vega','rho','volume','open_int','vol_oi']
-                df[num_cols] = df[num_cols].apply(pd.to_numeric, errors='coerce')
+                df.loc[:,num_cols] = df.loc[:,num_cols].apply(pd.to_numeric, errors='coerce')
 
                 date_cols = ['last_trade', 'asof_date']
                 df[date_cols] = df[date_cols].apply(pd.to_datetime, errors='coerce')
