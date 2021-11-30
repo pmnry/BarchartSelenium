@@ -20,6 +20,7 @@ Let's start with a look at the barchart page for SPY options. There are two avai
 
 ![alt text](https://github.com/pmnry/BarchartSelenium/blob/master/sidebyside.png?raw=true)
 
+
 It turns out that the stacked view is much simpler to parse. We will see this in a minute.
 
 ### Setting up Selenium to scrap the page
@@ -37,7 +38,7 @@ from selenium.webdriver.common.by import By
 
 url = "https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks"
 
-driver = webdriver.Chrome(executable_path=browser_path)
+driver = webdriver.Chrome(executable_path=BROWSER_PATH)
 driver.set_page_load_timeout(100)
 driver.implicitly_wait(30)
 driver.get(url)
@@ -78,7 +79,70 @@ The code snippet below shows how to select and extract the data by providing the
 
 
 ```python
+from selenium.webdriver.common.by import By
 
+### First we get the element by its XPATH
+
+expiry_box = driver.find_element(By.XPATH, '//*[@id="main-content-column"]/div/div[3]/div[1]/div/div[2]/select')
+
+### Then within the dropdown menu, each option has a tag "option" which we can get again by using the By object 
+### of the element class
+
+expiry_list = [x.text for x in expiry_box.find_elements(By.TAG_NAME,"option")]
+
+driver.quit()
+print(expiry_list)
+```
+
+    ['2021-12-01 (w)', '2021-12-03 (w)', '2021-12-06 (w)', '2021-12-08 (w)', '2021-12-10 (w)', '2021-12-13 (w)', '2021-12-15 (w)', '2021-12-17 (m)', '2021-12-20 (w)', '2021-12-22 (w)', '2021-12-23 (w)', '2021-12-27 (w)', '2021-12-29 (w)', '2021-12-31 (w)', '2022-01-03 (w)', '2022-01-05 (w)', '2022-01-07 (w)', '2022-01-21 (m)', '2022-02-18 (m)', '2022-03-18 (m)', '2022-03-31 (w)', '2022-04-14 (m)', '2022-05-20 (m)', '2022-06-17 (m)', '2022-06-30 (w)', '2022-09-16 (m)', '2022-09-30 (w)', '2022-12-16 (m)', '2023-01-20 (m)', '2023-03-17 (m)', '2023-06-16 (m)', '2023-12-15 (m)', '2024-01-19 (m)']
+    
+
+If we refer to the URL format we found above, we can loop through this list to get the web page display the option chains for each expiry.
+
+
+```python
+for expiry in expiry_list:
+    
+    ### We see that the string with the expiry contains either "(w)" or "(m)" which need to be replaced by a version
+    ### without brackets
+    
+    curr_url = url + '?expiration=' + expiry.replace(' (w)', '-w').replace(' (m)','-m') + '&' + moneyness
+    print(curr_url)
+    
+    ### We open a new webdriver
+    
+    driver = webdriver.Chrome(executable_path=browser_path)
+    driver.get(curr_url)
+    
+    ### The tables in each page can take a few seconds to load. To be safe we pause the script here.
+    time.sleep(5)
+
+    soup = BeautifulSoup(driver.page_source, 'lxml')
+    tables = soup.find_all('table')
+    dfs = pd.read_html(str(tables))
+
+    for df in dfs:
+        try:
+            df['asof_date'] = dt.now().strftime("%m/%d/%Y %H:%M:%S")
+            df['expiry'] = pd.to_datetime(expiry.replace(' (w)','').replace(' (m)',''))
+            df.drop(columns='Links', index=1, inplace=True)
+            # df.columns = df.columns.str.lower()
+            df = df.iloc[:-1]
+            df.rename(columns={'Strike': 'strike', 'Last': 'last', 'Theor.': 'theor', 'IV': 'iv', 'Delta': 'delta',
+                               'Gamma': 'gamma', 'Theta': 'theta', 'Vega': 'vega', 'Rho': 'rho', 'Volume': 'volume',
+                               'Open Int': 'open_int', 'Vol/OI': 'vol_oi', 'Type': 'type',
+                               'Last Trade': 'last_trade'}, inplace=True)
+            num_cols = ['strike','last','theor','iv','delta','gamma','theta','vega','rho','volume','open_int','vol_oi']
+            df.loc[:,num_cols] = df.loc[:,num_cols].apply(pd.to_numeric, errors='coerce')
+
+            date_cols = ['last_trade', 'asof_date']
+            df[date_cols] = df[date_cols].apply(pd.to_datetime, errors='coerce')
+
+            df.to_sql('chains', con=engine, if_exists='append', index=False)
+        except ValueError:
+            print('Error')
+
+    driver.quit()
 ```
 
 ### Potential improvements
