@@ -11,16 +11,14 @@ Let's start with a look at the barchart page for SPY options. There are two avai
 
 - a stacked view (https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks)
 
-![stacked_view.png](attachment:stacked_view.png)
-
-
+![alt text](https://github.com/pmnry/BarchartSelenium/blob/master/stacked_view.png?raw=true)
 
 
 
 
 - a side-by-side view (https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks?view=sbs)
 
-![sidebyside.png](attachment:sidebyside.png)
+![alt text](https://github.com/pmnry/BarchartSelenium/blob/master/sidebyside.png?raw=true)
 
 It turns out that the stacked view is much simpler to parse. We will see this in a minute.
 
@@ -54,7 +52,7 @@ Although Selenium allows to choose the first option (actions such as clicking ar
 
 First let's have a look at which expiries are available:
 
-![dropdown.png](attachment:dropdown.png)
+![alt text](https://github.com/pmnry/BarchartSelenium/blob/master/dropdown.png?raw=true)
 
 If we click the 03-12 option we get to the following URL: https://www.barchart.com/etfs-funds/quotes/SPY/volatility-greeks?expiration=2021-12-03-w
 
@@ -70,7 +68,7 @@ The "moneyness" argument can take values 5, 10, 20, 50. It seems that 50 shows a
 
 By right-clicking on the dropdown menu in Chrome we can inspect the HTML code of the page. The Chrome code editor opens up as a right pane and hovering on the code highlights the elements of the page that are implemented at that line.
 
-![inspect_dropdown.png](attachment:inspect_dropdown.png)
+![alt text](https://github.com/pmnry/BarchartSelenium/blob/master/inspect_dropdown.png?raw=true)
 
 We can then leverage a useful feature to locate a specific element which its XPATH. This article gives a great introduction to XPATH: http://plasmasturm.org/log/xpath101/ 
 
