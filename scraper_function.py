@@ -50,8 +50,9 @@ def barchart_scraper(browser_path, url, engine):
                                    'Open Int': 'open_int', 'Vol/OI': 'vol_oi', 'Type': 'type',
                                    'Last Trade': 'last_trade'}, inplace=True)
                 num_cols = ['strike','last','theor','iv','delta','gamma','theta','vega','rho','volume','open_int','vol_oi']
+                df['iv'] = df['iv'].apply(lambda x: x.strip('%'))
                 df.loc[:,num_cols] = df.loc[:,num_cols].apply(pd.to_numeric, errors='coerce')
-
+                df['iv'] = df['iv']/100
                 date_cols = ['last_trade', 'asof_date']
                 df[date_cols] = df[date_cols].apply(pd.to_datetime, errors='coerce')
 
