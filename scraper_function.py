@@ -38,6 +38,9 @@ def barchart_scraper(browser_path, url, engine):
         tables = soup.find_all('table')
         dfs = pd.read_html(str(tables))
 
+        last_px_elem = driver.find_element(By.XPATH, '/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/div/div[1]/div[2]/div[3]/span[1]')
+        last_px = float(last_px_elem.text)
+
         for df in dfs:
             try:
                 df['asof_date'] = dt.now().strftime("%m/%d/%Y %H:%M:%S")
@@ -55,6 +58,8 @@ def barchart_scraper(browser_path, url, engine):
                 df['iv'] = df['iv']/100
                 date_cols = ['last_trade', 'asof_date']
                 df[date_cols] = df[date_cols].apply(pd.to_datetime, errors='coerce')
+
+                df['last_px_underlying'] = last_px
 
                 df.to_sql('chains', con=engine, if_exists='append', index=False)
             except ValueError:
